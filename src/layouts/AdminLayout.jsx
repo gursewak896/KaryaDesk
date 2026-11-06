@@ -12,7 +12,7 @@ export default function AdminLayout() {
             {/* Sidebar */}
             <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
                 <div className="h-16 flex items-center px-6 border-b border-gray-200">
-                    <h1 className="text-xl font-bold text-gray-800">Sajilo Admin</h1>
+                    <h1 className="text-xl font-bold text-gray-800">KaryaDesk</h1>
                 </div>
                 <nav className="flex-1 p-4 space-y-1">
                     {navItems.map((item) => (
