@@ -1,3 +1,4 @@
+import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -20,7 +21,17 @@ import Skeleton from '../components/Skeleton'
 const statusLabel = { active: 'Active', leave: 'On Leave', inactive: 'Inactive' }
 
 const columns = [
-    { key: 'name', label: 'Name' },
+    {
+        key: 'name', label: 'Name', render: (row) => (
+            <Link
+                to={`/employees/${row.id}`}
+                className="text-blue-600 hover:underline font-medium"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {row.name}
+            </Link>
+        ),
+    },
     { key: 'email', label: 'Email' },
     { key: 'department', label: 'Department' },
     { key: 'role', label: 'Role' },
@@ -49,6 +60,7 @@ const statusOptions = [
 ]
 
 export default function Employees() {
+    const navigate = useNavigate()
     const dispatch = useDispatch()
     const employees = useSelector(selectEmployees)
     const loading = useSelector(selectEmployeesLoading)
@@ -75,16 +87,21 @@ export default function Employees() {
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">Employees</h2>
                     <p className="text-sm text-gray-500 mt-1">
                         {filtered.length} of {employees.length} employees
                     </p>
                 </div>
-                <Button variant="secondary" onClick={() => dispatch(clearFilters())}>
-                    Clear Filters
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="secondary" onClick={() => dispatch(clearFilters())}>
+                        Clear Filters
+                    </Button>
+                    <Link to="/employees/new">
+                        <Button>+ Add Employee</Button>
+                    </Link>
+                </div>
             </div>
 
             <Card className="p-4">
