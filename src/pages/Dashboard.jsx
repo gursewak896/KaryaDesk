@@ -2,20 +2,15 @@ import Card, { CardHeader } from '../components/Card'
 import StatCard from '../components/StatCard'
 import Table from '../components/Table'
 import Badge from '../components/Badge'
+import Skeleton from '../components/Skeleton'
+import useFetch from '../hooks/useFetch'
+import { employeeService } from '../services/api'
 
 const stats = [
     { label: 'Total Employees', value: '42', change: '+3', icon: '👥' },
     { label: 'Active Tasks', value: '128', change: '+12', icon: '📋' },
     { label: 'Departments', value: '6', change: '0', icon: '🏢' },
     { label: 'Completed Today', value: '15', change: '+5', icon: '✅' },
-]
-
-const recentEmployees = [
-    { id: 1, name: 'Aarav Sharma', email: 'aarav@karyadesk.com', department: 'Engineering', status: 'active' },
-    { id: 2, name: 'Priya Thapa', email: 'priya@karyadesk.com', department: 'Design', status: 'active' },
-    { id: 3, name: 'Bikash Gurung', email: 'bikash@karyadesk.com', department: 'Marketing', status: 'leave' },
-    { id: 4, name: 'Sneha Karki', email: 'sneha@karyadesk.com', department: 'Engineering', status: 'active' },
-    { id: 5, name: 'Rajesh Adhikari', email: 'rajesh@karyadesk.com', department: 'Sales', status: 'inactive' },
 ]
 
 const recentTasks = [
@@ -35,11 +30,20 @@ const employeeColumns = [
     {
         key: 'status',
         label: 'Status',
-        render: (row) => <Badge status={row.status}>{statusLabel[row.status]}</Badge>,
+        render: (row) => (
+            <Badge status={row.status || 'active'}>
+                {statusLabel[row.status] || 'Active'}
+            </Badge>
+        ),
     },
 ]
 
 export default function Dashboard() {
+    const { data: employees, loading, error } = useFetch(employeeService.getAll)
+
+    // Show only the 5 most recent
+    const recentEmployees = employees ? employees.slice(0, 5) : []
+
     return (
         <div className="space-y-6">
             <div>
@@ -47,24 +51,40 @@ export default function Dashboard() {
                 <p className="text-sm text-gray-500 mt-1">Overview of your team and tasks</p>
             </div>
 
-            {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((s) => (
                     <StatCard key={s.label} {...s} />
                 ))}
             </div>
 
-            {/* Two-column section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent employees — 2/3 width */}
                 <div className="lg:col-span-2">
                     <Card>
                         <CardHeader title="Recent Employees" />
-                        <Table columns={employeeColumns} data={recentEmployees} />
+                        {loading && (
+                            <div className="p-5 space-y-3">
+                                {[...Array(5)].map((_, i) => (
+                                    <Skeleton key={i} className="h-10 w-full" />
+                                ))}
+                            </div>
+                        )}
+                        {error && (
+                            <div className="p-5 text-center">
+                                <p className="text-sm text-red-600 mb-2">Failed to load employees: {error}</p>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="text-sm text-blue-600 hover:underline"
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        )}
+                        {!loading && !error && (
+                            <Table columns={employeeColumns} data={recentEmployees} />
+                        )}
                     </Card>
                 </div>
 
-                {/* Recent tasks — 1/3 width */}
                 <Card>
                     <CardHeader title="Recent Tasks" />
                     <ul className="divide-y divide-gray-100">
