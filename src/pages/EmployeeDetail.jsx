@@ -9,10 +9,13 @@ import Card, { CardHeader } from '../components/Card'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Modal from '../components/Modal'
+import useToast from '../hooks/useToast'
+import Toast from '../components/Toast'
 
 const statusLabel = { active: 'Active', leave: 'On Leave', inactive: 'Inactive' }
 
 export default function EmployeeDetail() {
+    const { toast, showToast, closeToast } = useToast()
     const { id } = useParams()
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -32,7 +35,8 @@ export default function EmployeeDetail() {
 
     const handleDelete = async () => {
         await dispatch(deleteEmployee(employee.id))
-        navigate('/employees')
+        showToast('Employee deleted')
+        setTimeout(() => navigate('/employees'), 500)
     }
 
     return (
@@ -93,6 +97,9 @@ export default function EmployeeDetail() {
             >
                 Are you sure you want to delete <strong>{employee.name}</strong>? This cannot be undone.
             </Modal>
+            {toast && (
+                <Toast message={toast.message} type={toast.type} onClose={closeToast} />
+            )}
         </div>
     )
 }

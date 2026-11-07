@@ -1,5 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import {
     fetchEmployees,
@@ -60,16 +60,24 @@ const statusOptions = [
 ]
 
 export default function Employees() {
-    const navigate = useNavigate()
     const dispatch = useDispatch()
+
     const employees = useSelector(selectEmployees)
     const loading = useSelector(selectEmployeesLoading)
     const error = useSelector(selectEmployeesError)
     const filters = useSelector(selectFilters)
 
+    const [page, setPage] = useState(1)
+    const PAGE_SIZE = 8
+
     useEffect(() => {
         dispatch(fetchEmployees())
     }, [dispatch])
+
+    // Reset to page 1 whenever filters change
+    useEffect(() => {
+        setPage(1)
+    }, [filters.search, filters.department, filters.status])
 
     const filtered = useMemo(() => {
         return employees.filter((emp) => {
@@ -84,6 +92,13 @@ export default function Employees() {
             return matchesSearch && matchesDept && matchesStatus
         })
     }, [employees, filters])
+
+    // Pagination math
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+    const paginated = useMemo(
+        () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+        [filtered, page]
+    )
 
     return (
         <div className="space-y-4">
@@ -148,7 +163,38 @@ export default function Employees() {
                     </div>
                 )}
                 {!loading && !error && (
-                    <Table columns={columns} data={filtered} emptyMessage="No employees match your filters." />
+                    <Table
+                        columns={columns}
+                        data={paginated}
+                        emptyMessage={
+                            employees.length === 0
+                                ? 'No employees yet. Click "+ Add Employee" to create one.'
+                                : 'No employees match your current filters. Try clearing them.'
+                        }
+                    />
+                )}
+                {!loading && !error && totalPages > 1 && (
+                    <div className="flex items-center justify-between px-5 py-3 border-t border-gray-200">
+                        <p className="text-xs text-gray-500">
+                            Page {page} of {totalPages}
+                        </p>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="secondary"
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
                 )}
             </Card>
         </div>

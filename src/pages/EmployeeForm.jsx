@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
+import useToast from '../hooks/useToast'
+import Toast from '../components/Toast'
 import {
     createEmployee,
     updateEmployee,
@@ -34,6 +36,7 @@ const emptyForm = {
 }
 
 export default function EmployeeForm() {
+    const { toast, showToast, closeToast } = useToast()
     const { id } = useParams()
     const isEdit = Boolean(id)
     const dispatch = useDispatch()
@@ -89,12 +92,16 @@ export default function EmployeeForm() {
         try {
             if (isEdit) {
                 await dispatch(updateEmployee({ id, data: form })).unwrap()
+                showToast('Employee updated successfully')
             } else {
                 await dispatch(createEmployee(form)).unwrap()
+                showToast('Employee created successfully')
             }
-            navigate('/employees')
+            // Small delay so user sees the toast
+            setTimeout(() => navigate('/employees'), 800)
         } catch (err) {
             setErrors({ submit: err })
+            showToast(err, 'error')
         } finally {
             setSubmitting(false)
         }
@@ -169,6 +176,9 @@ export default function EmployeeForm() {
                     </div>
                 </form>
             </Card>
+            {toast && (
+                <Toast message={toast.message} type={toast.type} onClose={closeToast} />
+            )}
         </div>
     )
 }

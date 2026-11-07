@@ -3,7 +3,7 @@ import StatCard from '../components/StatCard'
 import Table from '../components/Table'
 import Badge from '../components/Badge'
 import Skeleton from '../components/Skeleton'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
     fetchEmployees,
@@ -11,13 +11,6 @@ import {
     selectEmployeesLoading,
     selectEmployeesError,
 } from '../features/employees/employeesSlice'
-
-const stats = [
-    { label: 'Total Employees', value: '42', change: '+3', icon: '👥' },
-    { label: 'Active Tasks', value: '128', change: '+12', icon: '📋' },
-    { label: 'Departments', value: '6', change: '0', icon: '🏢' },
-    { label: 'Completed Today', value: '15', change: '+5', icon: '✅' },
-]
 
 const recentTasks = [
     { id: 1, title: 'Update employee onboarding docs', status: 'done', assignee: 'Aarav' },
@@ -44,16 +37,32 @@ const employeeColumns = [
 
 export default function Dashboard() {
     const dispatch = useDispatch()
+
+    // 1. Read from Redux FIRST
     const employees = useSelector(selectEmployees)
     const loading = useSelector(selectEmployeesLoading)
     const error = useSelector(selectEmployeesError)
 
+    // 2. Then dispatch the fetch
     useEffect(() => {
         // Only fetch if we don't have data yet (Dashboard may load first)
         if (employees.length === 0) {
             dispatch(fetchEmployees())
         }
     }, [dispatch, employees.length])
+
+    // 3. THEN derive values from employees
+    const stats = useMemo(() => {
+        const departments = new Set(employees.map((e) => e.department).filter(Boolean))
+        const active = employees.filter((e) => e.status === 'active').length
+        const onLeave = employees.filter((e) => e.status === 'leave').length
+        return [
+            { label: 'Total Employees', value: employees.length, icon: '👥' },
+            { label: 'Active', value: active, icon: '✅' },
+            { label: 'On Leave', value: onLeave, icon: '🌴' },
+            { label: 'Departments', value: departments.size, icon: '🏢' },
+        ]
+    }, [employees])
 
     // Show only the 5 most recent
     const recentEmployees = employees ? employees.slice(0, 5) : []
@@ -67,7 +76,7 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((s) => (
-                    <StatCard key={s.label} {...s} />
+                    <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} />
                 ))}
             </div>
 
