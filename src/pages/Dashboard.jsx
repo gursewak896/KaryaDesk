@@ -3,8 +3,14 @@ import StatCard from '../components/StatCard'
 import Table from '../components/Table'
 import Badge from '../components/Badge'
 import Skeleton from '../components/Skeleton'
-import useFetch from '../hooks/useFetch'
-import { employeeService } from '../services/api'
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+    fetchEmployees,
+    selectEmployees,
+    selectEmployeesLoading,
+    selectEmployeesError,
+} from '../features/employees/employeesSlice'
 
 const stats = [
     { label: 'Total Employees', value: '42', change: '+3', icon: '👥' },
@@ -31,15 +37,23 @@ const employeeColumns = [
         key: 'status',
         label: 'Status',
         render: (row) => (
-            <Badge status={row.status || 'active'}>
-                {statusLabel[row.status] || 'Active'}
-            </Badge>
+            <Badge status={row.status}>{statusLabel[row.status] || row.status}</Badge>
         ),
     },
 ]
 
 export default function Dashboard() {
-    const { data: employees, loading, error } = useFetch(employeeService.getAll)
+    const dispatch = useDispatch()
+    const employees = useSelector(selectEmployees)
+    const loading = useSelector(selectEmployeesLoading)
+    const error = useSelector(selectEmployeesError)
+
+    useEffect(() => {
+        // Only fetch if we don't have data yet (Dashboard may load first)
+        if (employees.length === 0) {
+            dispatch(fetchEmployees())
+        }
+    }, [dispatch, employees.length])
 
     // Show only the 5 most recent
     const recentEmployees = employees ? employees.slice(0, 5) : []

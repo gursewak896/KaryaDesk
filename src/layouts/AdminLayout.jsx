@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { logout, selectUser } from '../features/auth/authSlice'
 
 const navItems = [
     { path: '/', label: 'Dashboard' },
@@ -8,6 +11,14 @@ const navItems = [
 ]
 
 export default function AdminLayout() {
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
+    const user = useSelector(selectUser)
+
+    const handleLogout = () => {
+        dispatch(logout())
+        navigate('/login', { replace: true })
+    }
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
     const closeSidebar = () => setIsSidebarOpen(false)
@@ -78,7 +89,7 @@ export default function AdminLayout() {
                         </button>
                         <span className="text-sm text-gray-500">Welcome back</span>
                     </div>
-                    <button className="text-sm text-gray-600 hover:text-gray-900 font-medium">
+                    <button onClick={handleLogout} className="text-sm text-gray-600 hover:text-gray-900 font-medium">
                         Logout
                     </button>
                 </header>
